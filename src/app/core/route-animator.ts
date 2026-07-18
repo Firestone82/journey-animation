@@ -71,8 +71,9 @@ export class RouteAnimator {
     }
     this.total = accD;
     this.totalWeight = accW || 1;
-    // 12s for a short hop, up to 40s for a long tour.
-    this.baseDurationMs = Math.min(40_000, Math.max(12_000, this.total / 4));
+    // A calm baseline: ~20s for a short hop, up to 90s for a long tour —
+    // slow enough for the cinematic camera at 1×; the speed buttons go up to 4×.
+    this.baseDurationMs = Math.min(90_000, Math.max(20_000, this.total / 1.5));
   }
 
   get totalDistance(): number {

@@ -86,6 +86,16 @@ export class TripService {
   private elevationLayer: L.LayerGroup | null = null;
   private lastHoverCheck = 0;
 
+  /** In-progress drag from the route line (inserts a stop on release). */
+  private lineDrag: {
+    legIndex: number;
+    startPoint: L.Point;
+    latlng: L.LatLng;
+    started: boolean;
+    ghost: L.Marker | null;
+  } | null = null;
+  private suppressNextClick = false;
+
   private readonly legRouter = new LegRouter({
     modeForLeg: (i) => this.resolveLegMode(i),
   });
@@ -141,7 +151,7 @@ export class TripService {
 
     this.plan = L.Routing.plan([], {
       draggableWaypoints: true,
-      addWaypoints: true, // dragging the line inserts a via point
+      addWaypoints: true,
       createMarker: (i: number, wp: L.Routing.Waypoint, n: number) =>
         this.createWaypointMarker(i, wp, n),
     });
@@ -155,7 +165,9 @@ export class TripService {
         fitSelectedRoutes: false,
         showAlternatives: false,
         lineOptions: {
-          addWaypoints: true,
+          // LRM would insert a stop on a mere line *click*; the drag-to-insert
+          // below (onLineMouseDown & friends) replaces it with drag-only.
+          addWaypoints: false,
           missingRouteTolerance: 10,
           extendToWaypoints: true,
           // Colors come from the theme tokens via the class names (styles.scss);
@@ -168,8 +180,12 @@ export class TripService {
       })
       .addTo(this.map);
 
-    this.map.on('click', (e: L.LeafletMouseEvent) => this.appendWaypoint(e.latlng));
+    this.map.on('click', (e: L.LeafletMouseEvent) => {
+      if (this.suppressNextClick) return;
+      this.appendWaypoint(e.latlng);
+    });
     this.map.on('contextmenu', (e: L.LeafletMouseEvent) => this.onMapContextMenu(e));
+    this.map.on('mousedown', (e: L.LeafletMouseEvent) => this.onLineMouseDown(e));
     this.map.on('mousemove', (e: L.LeafletMouseEvent) => this.onMapHover(e));
 
     this.control.on('routingstart', () =>
@@ -599,9 +615,67 @@ export class TripService {
     });
   }
 
+  // --- Drag a stop out of the route line --------------------------------
+
+  private onLineMouseDown(e: L.LeafletMouseEvent): void {
+    if (e.originalEvent.button !== 0 || this.lineDrag) return;
+    const legIndex = this.hitTester?.legAt(e.latlng);
+    if (legIndex === null || legIndex === undefined) return;
+    // Claim the gesture: no map pan while pulling a new stop off the line.
+    this.map.dragging.disable();
+    this.lineDrag = {
+      legIndex,
+      startPoint: e.containerPoint,
+      latlng: e.latlng,
+      started: false,
+      ghost: null,
+    };
+    window.addEventListener('mouseup', this.onLineMouseUp);
+  }
+
+  private onLineDragMove(e: L.LeafletMouseEvent): void {
+    const drag = this.lineDrag!;
+    drag.latlng = e.latlng;
+    if (!drag.started) {
+      if (e.containerPoint.distanceTo(drag.startPoint) < 6) return;
+      drag.started = true;
+      drag.ghost = L.marker(e.latlng, {
+        interactive: false,
+        zIndexOffset: 1000,
+        icon: L.divIcon({
+          className: '',
+          html: `<div class="wp-pin wp-via wp-ghost">+</div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 36],
+        }),
+      }).addTo(this.map);
+    }
+    drag.ghost?.setLatLng(e.latlng);
+  }
+
+  private readonly onLineMouseUp = (): void => {
+    window.removeEventListener('mouseup', this.onLineMouseUp);
+    const drag = this.lineDrag;
+    if (!drag) return;
+    this.lineDrag = null;
+    this.map.dragging.enable();
+    drag.ghost?.remove();
+    // Swallow the click Leaflet synthesises right after this mouseup, so a
+    // plain click on the line no longer drops a waypoint at the route's end.
+    this.suppressNextClick = true;
+    setTimeout(() => (this.suppressNextClick = false));
+    if (!drag.started) return;
+    this.resetPlayback();
+    this.plan.spliceWaypoints(drag.legIndex + 1, 0, L.Routing.waypoint(drag.latlng));
+  };
+
   // --- Hover highlight --------------------------------------------------
 
   private onMapHover(e: L.LeafletMouseEvent): void {
+    if (this.lineDrag) {
+      this.onLineDragMove(e);
+      return;
+    }
     const now = performance.now();
     if (now - this.lastHoverCheck < 60) return;
     this.lastHoverCheck = now;
@@ -699,7 +773,9 @@ export class TripService {
         className: '',
         html: `<div class="wp-pin wp-${kind}">${label}</div>`,
         iconSize: [30, 30],
-        iconAnchor: [15, 15],
+        // The teardrop's tip sits ~21px below the box centre (30×30 square
+        // rotated 45°) — anchor there so the pin points at its spot.
+        iconAnchor: [15, 36],
       }),
     });
 

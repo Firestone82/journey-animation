@@ -124,6 +124,12 @@ path.route-highlight { stroke: var(--route-highlight); }
 .wp-end { background: #f2a33c; }
 .wp-via { background: var(--pin-bg); }
 
+/* Translucent pin shown while dragging a new stop out of the route line */
+.wp-ghost {
+  opacity: 0.75;
+  border-style: dashed;
+}
+
 .wp-popup {
   display: grid;
   gap: 8px;

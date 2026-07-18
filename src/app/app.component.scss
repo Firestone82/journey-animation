@@ -7,12 +7,21 @@
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   padding: 24px 22px;
   background: linear-gradient(180deg, var(--panel) 0%, var(--bg) 100%);
   border-right: 1px solid var(--line);
   overflow-y: auto;
   z-index: 500;
+
+  // Rule a line above each section after the mode switcher so the sidebar
+  // reads as clearly separated blocks.
+  > app-route-summary,
+  > app-playback-controls,
+  > app-journey-library {
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+  }
 }
 
 .masthead {

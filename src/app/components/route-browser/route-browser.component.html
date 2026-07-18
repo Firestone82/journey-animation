@@ -26,55 +26,50 @@
             {{ trip.pinLabel(p) }}
           </span>
           <span class="pin-name">{{ pinName(p) }}</span>
-          <span class="pin-actions">
-            <button
-              type="button"
-              class="mini-btn"
-              [disabled]="p === 0"
-              (click)="trip.moveWaypoint(p, -1)"
-              [attr.aria-label]="'Move ' + pinName(p) + ' earlier'">
-              ↑
-            </button>
-            <button
-              type="button"
-              class="mini-btn"
-              [disabled]="p === pinIndices().length - 1"
-              (click)="trip.moveWaypoint(p, 1)"
-              [attr.aria-label]="'Move ' + pinName(p) + ' later'">
-              ↓
-            </button>
-            <button
-              type="button"
-              class="mini-btn"
-              (click)="onPinMenu(p, $event)"
-              [attr.aria-label]="'Options for ' + pinName(p)">
-              ⋯
-            </button>
-          </span>
+          <button
+            type="button"
+            class="mini-btn"
+            (click)="onPinMenu(p, $event)"
+            [attr.aria-label]="'Options for ' + pinName(p) + ' (reorder, remove)'"
+            title="Options — reorder, remove">
+            ⋯
+          </button>
         </div>
 
         @if (p < trip.legs().length) {
-          <button
-            type="button"
+          <div
             class="leg-row"
             [class.is-hovered]="trip.hoveredLeg() === p"
             (mouseenter)="trip.highlightLeg(p)"
             (mouseleave)="trip.highlightLeg(null)"
-            (click)="trip.focusLeg(p)"
-            (contextmenu)="onLegMenu(p, $event)"
-            title="Click to zoom · right-click for mode & speed">
+            (contextmenu)="onLegMenu(p, $event)">
             <span class="leg-bar" aria-hidden="true"></span>
-            <span class="leg-icon" aria-hidden="true">{{ legIcon(trip.legs()[p].modeId) }}</span>
-            <span class="leg-text">
-              {{ km(trip.legs()[p].distance) | number: '1.1-1' }} km ·
-              {{ fmtDuration(trip.legs()[p].time) }}
-            </span>
-            @if (speedBadge(p)) {
-              <span class="leg-speed">{{ speedBadge(p) }}</span>
-            }
-          </button>
+            <button
+              type="button"
+              class="leg-main"
+              (click)="trip.focusLeg(p)"
+              title="Click to zoom to this leg">
+              <span class="leg-icon" aria-hidden="true">{{ legIcon(trip.legs()[p].modeId) }}</span>
+              <span class="leg-text">
+                {{ km(trip.legs()[p].distance) | number: '1.1-1' }} km ·
+                {{ fmtDuration(trip.legs()[p].time) }}
+              </span>
+              @if (speedBadge(p)) {
+                <span class="leg-speed">{{ speedBadge(p) }}</span>
+              }
+            </button>
+            <button
+              type="button"
+              class="mini-btn"
+              (click)="onLegMenu(p, $event)"
+              [attr.aria-label]="'Change path type or speed for this leg'"
+              title="Change path type / speed">
+              ⋯
+            </button>
+          </div>
         }
       }
     </div>
+    <span class="resize-hint" aria-hidden="true" title="Drag the corner to resize"></span>
   </section>
 }
