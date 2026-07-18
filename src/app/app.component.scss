@@ -1,0 +1,71 @@
+.shell {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: 100dvh;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 22px;
+  background: linear-gradient(180deg, var(--fir) 0%, var(--ink) 100%);
+  border-right: 1px solid rgba(243, 239, 228, 0.08);
+  overflow-y: auto;
+  z-index: 500;
+}
+
+.masthead {
+  h1 {
+    margin: 2px 0 4px;
+    font: 700 30px/1.05 var(--font-display);
+    letter-spacing: -0.01em;
+    color: var(--chalk);
+  }
+}
+
+.masthead-eyebrow {
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--blaze);
+}
+
+.masthead-sub {
+  margin: 0;
+  color: var(--chalk-dim);
+  font-size: 13px;
+}
+
+.panel-foot {
+  margin-top: auto;
+  font-size: 10px;
+  color: rgba(243, 239, 228, 0.4);
+}
+
+.map-wrap {
+  position: relative;
+}
+
+.map-fill {
+  position: absolute;
+  inset: 0;
+}
+
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+
+  .panel {
+    order: 2;
+    max-height: 46dvh;
+    border-right: 0;
+    border-top: 1px solid rgba(243, 239, 228, 0.08);
+  }
+
+  .map-wrap {
+    order: 1;
+  }
+}

@@ -1,0 +1,55 @@
+:host {
+  display: grid;
+  gap: 10px;
+}
+
+.howto {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  color: var(--chalk-dim);
+  font-size: 13px;
+}
+
+.route-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.stat {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--fir-raised);
+  border: 1px solid rgba(243, 239, 228, 0.1);
+}
+
+.stat-value {
+  font: 600 16px/1.1 var(--font-mono);
+  color: var(--chalk);
+
+  small {
+    font-size: 11px;
+    color: var(--chalk-dim);
+  }
+}
+
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+}
+
+.status {
+  margin: 0;
+  font-size: 12px;
+  color: var(--moss);
+}
+
+.status-error {
+  color: var(--clay);
+}

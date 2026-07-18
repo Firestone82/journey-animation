@@ -1,0 +1,44 @@
+:host {
+  display: grid;
+  gap: 10px;
+}
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(243, 239, 228, 0.14);
+  background: var(--fir-raised);
+  color: var(--chalk);
+  font: 600 13px/1 var(--font-body);
+  cursor: pointer;
+  transition: border-color 120ms, background 120ms;
+
+  &:hover {
+    border-color: var(--moss);
+  }
+
+  &.is-active {
+    background: var(--blaze);
+    border-color: var(--blaze);
+    color: var(--ink);
+  }
+}
+
+.mode-icon {
+  font-size: 17px;
+}
+
+.mode-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--chalk-dim);
+}

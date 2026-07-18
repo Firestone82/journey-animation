@@ -1,0 +1,16 @@
+<h2 class="block-title">Travel mode</h2>
+<div class="mode-grid" role="radiogroup" aria-label="Travel mode">
+  @for (m of modes; track m.id) {
+    <button
+      type="button"
+      class="mode-btn"
+      role="radio"
+      [attr.aria-checked]="trip.mode().id === m.id"
+      [class.is-active]="trip.mode().id === m.id"
+      (click)="trip.setMode(m)">
+      <span class="mode-icon" aria-hidden="true">{{ m.icon }}</span>
+      <span>{{ m.label }}</span>
+    </button>
+  }
+</div>
+<p class="mode-hint">{{ trip.mode().snapHint }}</p>

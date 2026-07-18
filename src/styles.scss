@@ -1,0 +1,110 @@
+/* Route Reel — global styles
+   Palette: spruce ink #14231e · fir #1d332c · moss #7fb69b
+            blaze amber #f2a33c · chalk #f3efe4 · clay red #e2604f */
+
+:root {
+  --ink: #14231e;
+  --fir: #1d332c;
+  --fir-raised: #26413a;
+  --moss: #7fb69b;
+  --blaze: #f2a33c;
+  --chalk: #f3efe4;
+  --chalk-dim: #c9c4b4;
+  --clay: #e2604f;
+  --font-display: 'Bricolage Grotesque', 'Public Sans', sans-serif;
+  --font-body: 'Public Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: var(--font-body);
+  color: var(--chalk);
+  background: var(--ink);
+}
+
+/* Leaflet Routing Machine draws its own itinerary panel; the app replaces it. */
+.leaflet-routing-container { display: none; }
+
+/* Waypoint pins (Leaflet divIcons live outside component styles) */
+.wp-pin {
+  width: 30px;
+  height: 30px;
+  border-radius: 50% 50% 50% 4px;
+  display: grid;
+  place-items: center;
+  font: 700 13px/1 var(--font-mono);
+  color: var(--ink);
+  background: var(--chalk);
+  border: 2px solid var(--ink);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  transform: rotate(-45deg);
+}
+.wp-pin > * { transform: rotate(45deg); }
+.wp-start { background: var(--moss); }
+.wp-end { background: var(--blaze); }
+.wp-via { background: var(--chalk); }
+
+.wp-popup {
+  display: grid;
+  gap: 8px;
+  font-family: var(--font-body);
+  min-width: 120px;
+}
+.wp-popup strong { font-family: var(--font-display); }
+.wp-popup button {
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font: 600 12px/1 var(--font-body);
+  color: #fff;
+  background: var(--clay);
+  cursor: pointer;
+}
+.wp-popup button:hover { filter: brightness(1.08); }
+
+.travel-marker {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  background: var(--chalk);
+  border: 3px solid var(--ink);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+/* Shared panel utilities (used by multiple components) */
+.block-title {
+  margin: 0;
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--moss);
+}
+
+.ghost-btn {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(243, 239, 228, 0.2);
+  background: transparent;
+  color: var(--chalk);
+  font: 600 12px/1 var(--font-body);
+  cursor: pointer;
+}
+.ghost-btn:not(:disabled):hover { border-color: var(--moss); }
+.ghost-btn:disabled { cursor: default; }
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--blaze);
+  outline-offset: 2px;
+}

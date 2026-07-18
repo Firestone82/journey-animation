@@ -1,0 +1,6 @@
+@if (trip.caption() && trip.hasRoute()) {
+  <div class="caption" role="status">
+    <span class="caption-icon" aria-hidden="true">{{ trip.mode().icon }}</span>
+    {{ trip.caption() }}
+  </div>
+}

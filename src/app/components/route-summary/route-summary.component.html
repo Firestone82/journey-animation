@@ -1,0 +1,32 @@
+<h2 class="block-title">Route</h2>
+
+@if (trip.waypointCount() === 0) {
+  <ol class="howto">
+    <li>Click the map to place the start.</li>
+    <li>Click again for the finish — and any stops.</li>
+    <li>Drag the line to reroute; click a pin to remove it.</li>
+  </ol>
+} @else {
+  <div class="route-stats">
+    <div class="stat">
+      <span class="stat-value">{{ km(trip.distance()) | number: '1.1-1' }}<small> km</small></span>
+      <span class="stat-label">Distance</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">{{ fmtDuration(trip.duration()) }}</span>
+      <span class="stat-label">Est. travel time</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">{{ trip.waypointCount() }}</span>
+      <span class="stat-label">Points</span>
+    </div>
+  </div>
+  <button type="button" class="ghost-btn" (click)="trip.clearAll()">Clear route</button>
+}
+
+@if (trip.routing()) {
+  <p class="status">Snapping to {{ trip.mode().label.toLowerCase() }} routes…</p>
+}
+@if (trip.error(); as err) {
+  <p class="status status-error">{{ err }}</p>
+}

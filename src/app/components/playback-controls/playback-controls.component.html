@@ -1,0 +1,59 @@
+<div class="player" [class.is-disabled]="!trip.hasRoute()">
+  <h2 class="block-title">Playback</h2>
+
+  <div class="reel" aria-hidden="true">
+    <div class="reel-track">
+      <div class="reel-fill" [style.width.%]="trip.progress() * 100"></div>
+      @for (tick of trip.stopTicks(); track $index) {
+        <span class="reel-tick" [style.left.%]="tick"></span>
+      }
+      <span class="reel-head" [style.left.%]="trip.progress() * 100"></span>
+    </div>
+  </div>
+
+  <div class="player-row">
+    <button
+      type="button"
+      class="play-btn"
+      (click)="trip.togglePlay()"
+      [disabled]="!trip.hasRoute()"
+      [attr.aria-label]="trip.playing() ? 'Pause playback' : 'Play playback'">
+      {{ trip.playing() ? '❚❚' : '▶' }}
+    </button>
+    <button
+      type="button"
+      class="ghost-btn"
+      (click)="trip.restart()"
+      [disabled]="!trip.hasRoute()">
+      Restart
+    </button>
+    <div class="speed-group" role="group" aria-label="Playback speed">
+      @for (f of speeds; track f) {
+        <button
+          type="button"
+          class="speed-btn"
+          [class.is-active]="trip.speed() === f"
+          [disabled]="!trip.hasRoute()"
+          (click)="trip.setSpeed(f)">
+          {{ f }}×
+        </button>
+      }
+    </div>
+  </div>
+
+  <label class="follow-toggle">
+    <input
+      type="checkbox"
+      [checked]="trip.follow()"
+      (change)="trip.toggleFollow()"
+      [disabled]="!trip.hasRoute()" />
+    Camera follows the rider
+  </label>
+
+  @if (trip.hasRoute()) {
+    <p class="player-readout">
+      {{ km(trip.travelled()) | number: '1.1-1' }} km travelled ·
+      {{ trip.progress() * 100 | number: '1.0-0' }}%
+    </p>
+  }
+</div>
