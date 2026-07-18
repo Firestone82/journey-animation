@@ -2,6 +2,7 @@ import * as L from 'leaflet';
 import 'leaflet-routing-machine';
 import { StraightLineRouter } from './straight-line-router';
 import { HybridRouter } from './hybrid-router';
+import { BRouterRouter } from './brouter-router';
 
 /**
  * A travel mode bundles everything routing + playback need to know.
@@ -45,12 +46,18 @@ export const TRAVEL_MODES: TravelMode[] = [
     label: 'Bike',
     icon: '🚴',
     speedKmh: 18,
-    snapHint: 'Cycle paths first — foot paths only at points you place on them',
+    snapHint: 'Prefers dedicated bike paths (BRouter, with elevation) — OSRM fallback',
+    // BRouter's trekking profile weights cycleways far above fast main roads
+    // and returns elevation. If brouter.de is down, the old OSRM hybrid takes over.
     createRouter: () =>
-      new HybridRouter({
-        primary: osrm('routed-bike'),
-        fallback: osrm('routed-foot'),
-        snapToleranceMeters: 25,
+      new BRouterRouter({
+        profile: 'trekking',
+        speedKmh: 18,
+        fallback: new HybridRouter({
+          primary: osrm('routed-bike'),
+          fallback: osrm('routed-foot'),
+          snapToleranceMeters: 25,
+        }),
       }),
   },
   {

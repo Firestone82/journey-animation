@@ -1,13 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 
 import { TripService } from '../../services/trip.service';
 import { TRAVEL_MODES } from '../../core/travel-modes';
 import { formatDuration, metresToKm } from '../../core/format';
 
+const DOCK_KEY = 'route-reel:browser-dock';
+
 /**
- * Lists every leg of the journey — pin to pin, with distance and travel
- * time — and lets each leg use its own travel mode (walk, cycle, …).
+ * Floating route browser over the map: every pin and the leg between each
+ * pair (mode, distance, time, speed override). Pins can be reordered;
+ * right-clicking a pin or a leg opens the same context menus as the map.
+ * Docked left by default, movable to the right and draggable vertically.
  */
 @Component({
   selector: 'app-route-browser',
@@ -18,28 +22,78 @@ import { formatDuration, metresToKm } from '../../core/format';
 })
 export class RouteBrowserComponent {
   readonly trip = inject(TripService);
-  readonly modes = TRAVEL_MODES;
   readonly km = metresToKm;
   readonly fmtDuration = formatDuration;
 
-  pinLabel(waypointIndex: number): string {
+  readonly dock = signal<'left' | 'right'>(readDock());
+  readonly offsetY = signal(0);
+  readonly pinIndices = computed(() =>
+    Array.from({ length: this.trip.legs().length + 1 }, (_, i) => i),
+  );
+
+  private dragStartY = 0;
+  private dragStartOffset = 0;
+
+  pinName(i: number): string {
     const last = this.trip.legs().length;
-    if (waypointIndex === 0) return 'A';
-    return waypointIndex === last ? 'B' : String(waypointIndex);
+    return i === 0 ? 'Start' : i === last ? 'Finish' : `Stop ${i}`;
   }
 
   legIcon(modeId: string): string {
-    return this.modes.find((m) => m.id === modeId)?.icon ?? '';
+    return TRAVEL_MODES.find((m) => m.id === modeId)?.icon ?? '';
   }
 
-  /** Value for the leg's select: the override's mode id, or '' for trip mode. */
-  selectedMode(legIndex: number): string {
-    const overrides: Partial<Record<number, string>> = this.trip.legModes();
-    return overrides[legIndex] ?? '';
+  speedBadge(legIndex: number): string {
+    const overrides: Partial<Record<number, number>> = this.trip.legSpeeds();
+    const f = overrides[legIndex];
+    return f ? `${f}×` : '';
   }
 
-  onModeChange(legIndex: number, event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.trip.setLegMode(legIndex, value || null);
+  toggleDock(): void {
+    const next = this.dock() === 'left' ? 'right' : 'left';
+    this.dock.set(next);
+    try {
+      localStorage.setItem(DOCK_KEY, next);
+    } catch {
+      // Private mode — dock side just won't persist.
+    }
+  }
+
+  onPinMenu(i: number, ev: MouseEvent): void {
+    ev.preventDefault();
+    ev.stopPropagation();
+    this.trip.openPinMenu(i, ev.clientX, ev.clientY);
+  }
+
+  onLegMenu(i: number, ev: MouseEvent): void {
+    ev.preventDefault();
+    ev.stopPropagation();
+    this.trip.openLegMenu(i, ev.clientX, ev.clientY);
+  }
+
+  startDrag(ev: PointerEvent): void {
+    // Only the header drags; buttons inside it keep working.
+    if ((ev.target as HTMLElement).closest('button')) return;
+    ev.preventDefault();
+    this.dragStartY = ev.clientY;
+    this.dragStartOffset = this.offsetY();
+    const move = (e: PointerEvent) => {
+      const next = this.dragStartOffset + (e.clientY - this.dragStartY);
+      this.offsetY.set(Math.max(0, Math.min(next, window.innerHeight * 0.55)));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  }
+}
+
+function readDock(): 'left' | 'right' {
+  try {
+    return localStorage.getItem(DOCK_KEY) === 'right' ? 'right' : 'left';
+  } catch {
+    return 'left';
   }
 }

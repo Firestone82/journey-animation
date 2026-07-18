@@ -1,2 +1,4 @@
-<div #map class="map" aria-label="Route map"></div>
+<div class="map-stage" [class.is-tilted]="trip.tilted()">
+  <div #map class="map" aria-label="Route map"></div>
+</div>
 <app-trip-caption />

@@ -1,39 +1,80 @@
 @if (trip.hasRoute() && trip.legs().length) {
-  <h2 class="block-title">Route browser</h2>
-  <ul class="legs">
-    @for (leg of trip.legs(); track $index; let i = $index) {
-      <li class="leg">
-        <button
-          type="button"
-          class="leg-pins"
-          (click)="trip.focusLeg(i)"
-          title="Zoom the map to this leg">
-          <span class="pin-chip" [class.pin-start]="i === 0">{{ pinLabel(i) }}</span>
-          <span class="leg-arrow" aria-hidden="true">→</span>
-          <span class="pin-chip" [class.pin-end]="i === trip.legs().length - 1">
-            {{ pinLabel(i + 1) }}
+  <section
+    class="browser"
+    [class.dock-right]="dock() === 'right'"
+    [style.transform]="'translateY(' + offsetY() + 'px)'">
+    <header class="browser-head" (pointerdown)="startDrag($event)" title="Drag to move up/down">
+      <h2 class="block-title">Route</h2>
+      <span class="drag-grip" aria-hidden="true">⋮⋮</span>
+      <button
+        type="button"
+        class="dock-btn"
+        (click)="toggleDock()"
+        [attr.aria-label]="dock() === 'left' ? 'Move panel to the right side' : 'Move panel to the left side'"
+        [title]="dock() === 'left' ? 'Move to right side' : 'Move to left side'">
+        {{ dock() === 'left' ? '⇥' : '⇤' }}
+      </button>
+    </header>
+
+    <div class="browser-body">
+      @for (p of pinIndices(); track p) {
+        <div class="pin-row" (contextmenu)="onPinMenu(p, $event)">
+          <span
+            class="pin-chip"
+            [class.pin-start]="p === 0"
+            [class.pin-end]="p === pinIndices().length - 1">
+            {{ trip.pinLabel(p) }}
           </span>
-        </button>
-        <span class="leg-meta">
-          <span class="leg-icon" aria-hidden="true">{{ legIcon(leg.modeId) }}</span>
-          {{ km(leg.distance) | number: '1.1-1' }} km · {{ fmtDuration(leg.time) }}
-        </span>
-        <select
-          class="leg-mode"
-          (change)="onModeChange(i, $event)"
-          [attr.aria-label]="'Travel mode for leg ' + pinLabel(i) + ' to ' + pinLabel(i + 1)">
-          <!-- [selected] instead of [value] on the select: the value binding
-               runs before the options exist on first render and gets lost. -->
-          <option value="" [selected]="selectedMode(i) === ''">
-            Trip mode ({{ trip.mode().label }})
-          </option>
-          @for (m of modes; track m.id) {
-            <option [value]="m.id" [selected]="selectedMode(i) === m.id">
-              {{ m.icon }} {{ m.label }}
-            </option>
-          }
-        </select>
-      </li>
-    }
-  </ul>
+          <span class="pin-name">{{ pinName(p) }}</span>
+          <span class="pin-actions">
+            <button
+              type="button"
+              class="mini-btn"
+              [disabled]="p === 0"
+              (click)="trip.moveWaypoint(p, -1)"
+              [attr.aria-label]="'Move ' + pinName(p) + ' earlier'">
+              ↑
+            </button>
+            <button
+              type="button"
+              class="mini-btn"
+              [disabled]="p === pinIndices().length - 1"
+              (click)="trip.moveWaypoint(p, 1)"
+              [attr.aria-label]="'Move ' + pinName(p) + ' later'">
+              ↓
+            </button>
+            <button
+              type="button"
+              class="mini-btn"
+              (click)="onPinMenu(p, $event)"
+              [attr.aria-label]="'Options for ' + pinName(p)">
+              ⋯
+            </button>
+          </span>
+        </div>
+
+        @if (p < trip.legs().length) {
+          <button
+            type="button"
+            class="leg-row"
+            [class.is-hovered]="trip.hoveredLeg() === p"
+            (mouseenter)="trip.highlightLeg(p)"
+            (mouseleave)="trip.highlightLeg(null)"
+            (click)="trip.focusLeg(p)"
+            (contextmenu)="onLegMenu(p, $event)"
+            title="Click to zoom · right-click for mode & speed">
+            <span class="leg-bar" aria-hidden="true"></span>
+            <span class="leg-icon" aria-hidden="true">{{ legIcon(trip.legs()[p].modeId) }}</span>
+            <span class="leg-text">
+              {{ km(trip.legs()[p].distance) | number: '1.1-1' }} km ·
+              {{ fmtDuration(trip.legs()[p].time) }}
+            </span>
+            @if (speedBadge(p)) {
+              <span class="leg-speed">{{ speedBadge(p) }}</span>
+            }
+          </button>
+        }
+      }
+    </div>
+  </section>
 }

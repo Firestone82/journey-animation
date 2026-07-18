@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { TripService } from '../../services/trip.service';
+import { CameraMode, TripService } from '../../services/trip.service';
 import { metresToKm } from '../../core/format';
 
 @Component({
@@ -13,5 +13,10 @@ import { metresToKm } from '../../core/format';
 export class PlaybackControlsComponent {
   readonly trip = inject(TripService);
   readonly speeds = [0.5, 1, 2, 4];
+  readonly cameras: { id: CameraMode; label: string }[] = [
+    { id: 'off', label: 'Off' },
+    { id: 'follow', label: 'Follow' },
+    { id: 'cinematic', label: 'Cinematic' },
+  ];
   readonly km = metresToKm;
 }

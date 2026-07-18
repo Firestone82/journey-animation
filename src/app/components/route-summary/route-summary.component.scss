@@ -44,6 +44,16 @@
   color: var(--text-dim);
 }
 
+.actions-row {
+  display: flex;
+  gap: 6px;
+
+  .ghost-btn {
+    flex: 1;
+    padding: 8px 6px;
+  }
+}
+
 .status {
   margin: 0;
   font-size: 12px;

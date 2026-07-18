@@ -1,0 +1,77 @@
+.ctx-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1900;
+}
+
+.ctx {
+  position: fixed;
+  z-index: 2000;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  min-width: 210px;
+  max-width: 260px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 10px 30px var(--shadow);
+}
+
+.ctx-header {
+  padding: 6px 10px 3px;
+  font: 600 10px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.ctx-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--line);
+}
+
+.ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text);
+  font: 500 13px/1.2 var(--font-body);
+  text-align: left;
+  cursor: pointer;
+
+  &:not(:disabled):hover {
+    background: var(--panel);
+  }
+
+  &:disabled {
+    color: var(--text-dim);
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  &.is-danger:not(:disabled) {
+    color: var(--danger);
+  }
+}
+
+.ctx-check {
+  width: 14px;
+  flex: none;
+  color: var(--good);
+  font-weight: 700;
+}
+
+.ctx-icon {
+  flex: none;
+}
+
+.ctx-label {
+  min-width: 0;
+}

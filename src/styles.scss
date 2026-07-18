@@ -27,6 +27,7 @@
   --pin-ink: #14231e;
   --route-casing: #0e1f1a;
   --route-line: #f2a33c;
+  --route-highlight: #5ec9ff;
 
   --font-display: 'Bricolage Grotesque', 'Public Sans', sans-serif;
   --font-body: 'Public Sans', system-ui, sans-serif;
@@ -53,6 +54,7 @@
 
   --route-casing: #3f5449;
   --route-line: #e08a1e;
+  --route-highlight: #0f7fd2;
 }
 
 * { box-sizing: border-box; }
@@ -71,6 +73,7 @@ html, body {
 /* Route line (classes set in TripService lineOptions) */
 path.route-casing { stroke: var(--route-casing); }
 path.route-line { stroke: var(--route-line); }
+path.route-highlight { stroke: var(--route-highlight); }
 
 /* Soften the light OSM tiles when the UI is dark. */
 :root[data-theme='dark'] .leaflet-tile {

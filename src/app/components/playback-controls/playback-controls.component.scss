@@ -99,6 +99,20 @@
   }
 }
 
+.camera-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.camera-label {
+  margin-right: 4px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
 .follow-toggle {
   display: flex;
   align-items: center;

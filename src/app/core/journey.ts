@@ -5,6 +5,8 @@ export interface JourneySnapshot {
   waypoints: { lat: number; lng: number }[];
   /** Per-leg mode overrides, keyed by leg index. */
   legModes?: Record<number, string>;
+  /** Per-leg playback-speed multipliers (1 = trip speed), keyed by leg index. */
+  legSpeeds?: Record<number, number>;
 }
 
 /** A journey stored in the browser library (and the file export shape). */
@@ -36,5 +38,17 @@ export function parseSnapshot(value: unknown): JourneySnapshot | null {
       if (Number.isInteger(i) && i >= 0 && typeof m === 'string') legModes[i] = m;
     }
   }
-  return { modeId: v.modeId, waypoints, legModes };
+  const legSpeeds: Record<number, number> = {};
+  if (v.legSpeeds && typeof v.legSpeeds === 'object') {
+    for (const [k, f] of Object.entries(v.legSpeeds)) {
+      const i = Number(k);
+      if (
+        Number.isInteger(i) && i >= 0 &&
+        typeof f === 'number' && Number.isFinite(f) && f >= 0.1 && f <= 5
+      ) {
+        legSpeeds[i] = f;
+      }
+    }
+  }
+  return { modeId: v.modeId, waypoints, legModes, legSpeeds };
 }
