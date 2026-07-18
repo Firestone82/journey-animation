@@ -4,7 +4,8 @@
   <ol class="howto">
     <li>Click the map to place the start.</li>
     <li>Click again for the finish — and any stops.</li>
-    <li>Drag the line to reroute; click a pin to remove it.</li>
+    <li>Drag the line to reroute; click a pin for options.</li>
+    <li>Right-click the map, a pin, or the route for more.</li>
   </ol>
 } @else {
   <div class="route-stats">
@@ -21,8 +22,29 @@
       <span class="stat-label">Points</span>
     </div>
   </div>
-  <button type="button" class="ghost-btn" (click)="trip.clearAll()">Clear route</button>
 }
+
+<div class="actions-row">
+  <button
+    type="button"
+    class="ghost-btn"
+    (click)="trip.undo()"
+    [disabled]="!trip.canUndo()"
+    title="Undo (Ctrl+Z)">
+    ↶ Undo
+  </button>
+  <button
+    type="button"
+    class="ghost-btn"
+    (click)="trip.redo()"
+    [disabled]="!trip.canRedo()"
+    title="Redo (Ctrl+Y)">
+    ↷ Redo
+  </button>
+  @if (trip.waypointCount() > 0) {
+    <button type="button" class="ghost-btn" (click)="trip.clearAll()">Clear</button>
+  }
+</div>
 
 @if (trip.routing()) {
   <p class="status">Snapping to {{ trip.mode().label.toLowerCase() }} routes…</p>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Route Reel — a winding route from start dot to finish pin -->
+  <rect width="512" height="512" rx="104" fill="#14231e"/>
+  <path d="M118 398 C 210 386 160 268 252 248 S 380 214 386 138"
+        fill="none" stroke="#0e1f1a" stroke-width="58" stroke-linecap="round"/>
+  <path d="M118 398 C 210 386 160 268 252 248 S 380 214 386 138"
+        fill="none" stroke="#f2a33c" stroke-width="34" stroke-linecap="round"/>
+  <circle cx="118" cy="398" r="34" fill="#7fb69b" stroke="#f3efe4" stroke-width="12"/>
+  <g transform="translate(386 118)">
+    <path d="M0 -58 C 34 -58 58 -34 58 -2 C 58 30 22 52 0 84 C -22 52 -58 30 -58 -2 C -58 -34 -34 -58 0 -58 Z"
+          fill="#f3efe4"/>
+    <circle cx="0" cy="-4" r="26" fill="#e2604f"/>
+  </g>
+</svg>

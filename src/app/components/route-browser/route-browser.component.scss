@@ -1,0 +1,211 @@
+:host {
+  position: absolute;
+  inset: 0;
+  z-index: 600;
+  pointer-events: none;
+}
+
+.browser {
+  pointer-events: auto;
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 250px;
+  max-height: min(80%, 640px);
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: var(--overlay);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 8px 26px var(--shadow);
+  backdrop-filter: blur(4px);
+  // Native vertical resize via the bottom-right grip.
+  resize: vertical;
+  overflow: hidden;
+
+  &.dock-right {
+    left: auto;
+    right: 12px;
+  }
+}
+
+.browser-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 8px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  flex: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.drag-grip {
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.dock-btn {
+  margin-left: auto;
+  width: 26px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--good);
+    color: var(--text);
+  }
+}
+
+.browser-body {
+  overflow-y: auto;
+  padding: 0 10px 10px;
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  flex: 1;
+}
+
+.pin-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px;
+}
+
+.pin-chip {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font: 700 11px/1 var(--font-mono);
+  color: var(--pin-ink);
+  background: var(--pin-bg);
+}
+
+.pin-start {
+  background: #7fb69b;
+}
+
+.pin-end {
+  background: #f2a33c;
+}
+
+.pin-name {
+  min-width: 0;
+  font: 600 12px/1.2 var(--font-body);
+  color: var(--text);
+}
+
+.pin-row > .mini-btn {
+  margin-left: auto;
+}
+
+.mini-btn {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+
+  &:not(:disabled):hover {
+    border-color: var(--line-strong);
+    color: var(--text);
+  }
+}
+
+.leg-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 10px;
+  padding-left: 12px;
+  border-radius: 8px;
+
+  &:hover,
+  &.is-hovered {
+    background: var(--surface);
+
+    .leg-bar {
+      background: var(--route-highlight, #5ec9ff);
+    }
+
+    .leg-main {
+      color: var(--text);
+    }
+  }
+}
+
+.leg-bar {
+  position: absolute;
+  left: 2px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+.leg-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 2px 5px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font: 500 12px/1.2 var(--font-mono);
+  text-align: left;
+  cursor: pointer;
+}
+
+.leg-icon {
+  font-size: 13px;
+}
+
+.leg-text {
+  min-width: 0;
+}
+
+.leg-speed {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 700 10px/1.4 var(--font-mono);
+}
+
+.resize-hint {
+  flex: none;
+  height: 4px;
+}
+
+@media (max-width: 860px) {
+  .browser {
+    width: 200px;
+    max-height: 45%;
+  }
+}

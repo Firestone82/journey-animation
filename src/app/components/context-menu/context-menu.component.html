@@ -1,0 +1,35 @@
+@if (menu.state(); as m) {
+  <!-- Pointer-only dismiss layer; keyboard users close the menu with Escape
+       (document-level host listener). -->
+  <div
+    class="ctx-backdrop"
+    aria-hidden="true"
+    (click)="menu.close()"
+    (wheel)="menu.close()"
+    (contextmenu)="onBackdropContextMenu($event)"></div>
+  <ul class="ctx" role="menu" [style.left.px]="m.x" [style.top.px]="m.y">
+    @for (e of m.entries; track $index) {
+      @if (e.kind === 'header') {
+        <li class="ctx-header">{{ e.label }}</li>
+      } @else if (e.kind === 'sep') {
+        <li class="ctx-sep" role="separator"></li>
+      } @else {
+        <li>
+          <button
+            type="button"
+            role="menuitem"
+            class="ctx-item"
+            [class.is-danger]="e.danger"
+            [disabled]="e.disabled"
+            (click)="menu.run(e)">
+            <span class="ctx-check" aria-hidden="true">{{ e.checked ? '✓' : '' }}</span>
+            @if (e.icon) {
+              <span class="ctx-icon" aria-hidden="true">{{ e.icon }}</span>
+            }
+            <span class="ctx-label">{{ e.label }}</span>
+          </button>
+        </li>
+      }
+    }
+  </ul>
+}

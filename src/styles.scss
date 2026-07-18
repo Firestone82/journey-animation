@@ -1,19 +1,60 @@
 /* Route Reel — global styles
-   Palette: spruce ink #14231e · fir #1d332c · moss #7fb69b
-            blaze amber #f2a33c · chalk #f3efe4 · clay red #e2604f */
+   Semantic colour tokens, themed via data-theme on <html> (see ThemeService).
+   Dark palette: spruce ink #14231e · fir #1d332c · moss #7fb69b
+                 blaze amber #f2a33c · chalk #f3efe4 · clay red #e2604f
+   The light palette keeps the same hues at readable contrast. */
 
 :root {
-  --ink: #14231e;
-  --fir: #1d332c;
-  --fir-raised: #26413a;
-  --moss: #7fb69b;
-  --blaze: #f2a33c;
-  --chalk: #f3efe4;
-  --chalk-dim: #c9c4b4;
-  --clay: #e2604f;
+  color-scheme: dark;
+
+  --bg: #14231e;
+  --panel: #1d332c;
+  --surface: #26413a;
+  --text: #f3efe4;
+  --text-dim: #c9c4b4;
+  --line: rgba(243, 239, 228, 0.12);
+  --line-strong: rgba(243, 239, 228, 0.2);
+  --accent: #f2a33c;
+  --accent-soft: rgba(242, 163, 60, 0.55);
+  --on-accent: #14231e;
+  --good: #7fb69b;
+  --danger: #e2604f;
+  --overlay: rgba(20, 35, 30, 0.92);
+  --shadow: rgba(0, 0, 0, 0.35);
+
+  /* Map furniture — stays legible on the (dimmed) light tiles. */
+  --pin-bg: #f3efe4;
+  --pin-ink: #14231e;
+  --route-casing: #0e1f1a;
+  --route-line: #f2a33c;
+  --route-highlight: #5ec9ff;
+
   --font-display: 'Bricolage Grotesque', 'Public Sans', sans-serif;
   --font-body: 'Public Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #ece7d8;
+  --panel: #f8f5ec;
+  --surface: #ffffff;
+  --text: #1c2a24;
+  --text-dim: #5d6a63;
+  --line: rgba(20, 35, 30, 0.12);
+  --line-strong: rgba(20, 35, 30, 0.22);
+  --accent: #d98a17;
+  --accent-soft: rgba(217, 138, 23, 0.5);
+  --on-accent: #14231e;
+  --good: #2f7a5c;
+  --danger: #bd4a39;
+  --overlay: rgba(248, 245, 236, 0.94);
+  --shadow: rgba(20, 35, 30, 0.18);
+
+  --route-casing: #3f5449;
+  --route-line: #e08a1e;
+  --route-highlight: #0f7fd2;
 }
 
 * { box-sizing: border-box; }
@@ -22,12 +63,47 @@ html, body {
   margin: 0;
   height: 100%;
   font-family: var(--font-body);
-  color: var(--chalk);
-  background: var(--ink);
+  color: var(--text);
+  background: var(--bg);
 }
 
 /* Leaflet Routing Machine draws its own itinerary panel; the app replaces it. */
 .leaflet-routing-container { display: none; }
+
+/* Route line (classes set in TripService lineOptions) */
+path.route-casing { stroke: var(--route-casing); }
+path.route-line { stroke: var(--route-line); }
+path.route-highlight { stroke: var(--route-highlight); }
+
+/* Soften the light OSM tiles when the UI is dark. */
+:root[data-theme='dark'] .leaflet-tile {
+  filter: brightness(0.82) saturate(0.85) contrast(1.05);
+}
+
+/* Theme Leaflet's own furniture (zoom, attribution, popups). */
+.leaflet-bar a,
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+  background: var(--surface);
+  color: var(--text);
+  border-bottom-color: var(--line-strong);
+}
+.leaflet-bar a.leaflet-disabled {
+  background: var(--surface);
+  color: var(--text-dim);
+}
+.leaflet-control-attribution {
+  background: var(--overlay);
+  color: var(--text-dim);
+
+  a { color: var(--good); }
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 3px 14px var(--shadow);
+}
 
 /* Waypoint pins (Leaflet divIcons live outside component styles) */
 .wp-pin {
@@ -37,16 +113,22 @@ html, body {
   display: grid;
   place-items: center;
   font: 700 13px/1 var(--font-mono);
-  color: var(--ink);
-  background: var(--chalk);
-  border: 2px solid var(--ink);
+  color: var(--pin-ink);
+  background: var(--pin-bg);
+  border: 2px solid var(--pin-ink);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   transform: rotate(-45deg);
 }
 .wp-pin > * { transform: rotate(45deg); }
-.wp-start { background: var(--moss); }
-.wp-end { background: var(--blaze); }
-.wp-via { background: var(--chalk); }
+.wp-start { background: #7fb69b; }
+.wp-end { background: #f2a33c; }
+.wp-via { background: var(--pin-bg); }
+
+/* Translucent pin shown while dragging a new stop out of the route line */
+.wp-ghost {
+  opacity: 0.75;
+  border-style: dashed;
+}
 
 .wp-popup {
   display: grid;
@@ -61,7 +143,7 @@ html, body {
   padding: 6px 10px;
   font: 600 12px/1 var(--font-body);
   color: #fff;
-  background: var(--clay);
+  background: var(--danger);
   cursor: pointer;
 }
 .wp-popup button:hover { filter: brightness(1.08); }
@@ -73,8 +155,8 @@ html, body {
   display: grid;
   place-items: center;
   font-size: 20px;
-  background: var(--chalk);
-  border: 3px solid var(--ink);
+  background: var(--pin-bg);
+  border: 3px solid var(--pin-ink);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
 }
 
@@ -88,23 +170,24 @@ html, body {
   font: 600 11px/1 var(--font-mono);
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--moss);
+  color: var(--good);
 }
 
 .ghost-btn {
   padding: 9px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(243, 239, 228, 0.2);
+  border: 1px solid var(--line-strong);
   background: transparent;
-  color: var(--chalk);
+  color: var(--text);
   font: 600 12px/1 var(--font-body);
   cursor: pointer;
 }
-.ghost-btn:not(:disabled):hover { border-color: var(--moss); }
-.ghost-btn:disabled { cursor: default; }
+.ghost-btn:not(:disabled):hover { border-color: var(--good); }
+.ghost-btn:disabled { cursor: default; opacity: 0.6; }
 
 button:focus-visible,
-input:focus-visible {
-  outline: 2px solid var(--blaze);
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }

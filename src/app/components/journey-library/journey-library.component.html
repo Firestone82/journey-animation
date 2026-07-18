@@ -1,0 +1,76 @@
+<h2 class="block-title">Journeys</h2>
+
+<div class="save-row">
+  <input
+    #name
+    type="text"
+    class="name-input"
+    placeholder="Name this journey"
+    maxlength="60"
+    [disabled]="!trip.hasRoute()"
+    (keydown.enter)="save(name)"
+    aria-label="Journey name" />
+  <button
+    type="button"
+    class="ghost-btn"
+    [disabled]="!trip.hasRoute()"
+    (click)="save(name)">
+    Save
+  </button>
+</div>
+
+<div class="io-row">
+  <button
+    type="button"
+    class="ghost-btn"
+    [disabled]="!trip.hasRoute()"
+    (click)="downloadCurrent()">
+    ⬇ Download file
+  </button>
+  <label class="ghost-btn import-btn">
+    ⬆ Import file
+    <input type="file" accept=".json,application/json" (change)="onImport($event)" />
+  </label>
+</div>
+
+@if (importError(); as err) {
+  <p class="import-error">{{ err }}</p>
+}
+
+@if (store.journeys().length) {
+  <ul class="journey-list">
+    @for (j of store.journeys(); track j.id) {
+      <li class="journey">
+        <button
+          type="button"
+          class="journey-load"
+          (click)="load(j)"
+          [title]="'Load “' + j.name + '”'">
+          <span class="journey-name">{{ j.name }}</span>
+          <span class="journey-meta">
+            @if (j.distance) {
+              {{ km(j.distance) | number: '1.0-0' }} km ·
+            }
+            {{ j.waypoints.length }} pins · {{ j.savedAt | date: 'mediumDate' }}
+          </span>
+        </button>
+        <button
+          type="button"
+          class="icon-btn"
+          (click)="store.download(j)"
+          [attr.aria-label]="'Download ' + j.name">
+          ⬇
+        </button>
+        <button
+          type="button"
+          class="icon-btn icon-danger"
+          (click)="store.remove(j.id)"
+          [attr.aria-label]="'Delete ' + j.name">
+          ✕
+        </button>
+      </li>
+    }
+  </ul>
+} @else {
+  <p class="empty-hint">Saved journeys stay in this browser — or download them as files.</p>
+}

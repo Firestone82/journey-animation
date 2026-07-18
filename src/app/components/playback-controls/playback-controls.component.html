@@ -41,13 +41,31 @@
     </div>
   </div>
 
-  <label class="follow-toggle">
+  <div class="camera-row" role="group" aria-label="Camera mode">
+    <span class="camera-label">Camera</span>
+    @for (c of cameras; track c.id) {
+      <button
+        type="button"
+        class="speed-btn"
+        [class.is-active]="trip.camera() === c.id"
+        [disabled]="!trip.hasRoute()"
+        (click)="trip.setCamera(c.id)">
+        {{ c.label }}
+      </button>
+    }
+  </div>
+
+  <label
+    class="follow-toggle"
+    [title]="trip.hasElevation()
+      ? 'Green = downhill, red = uphill'
+      : 'Elevation data comes with bike (BRouter) routes'">
     <input
       type="checkbox"
-      [checked]="trip.follow()"
-      (change)="trip.toggleFollow()"
-      [disabled]="!trip.hasRoute()" />
-    Camera follows the rider
+      [checked]="trip.showElevation()"
+      (change)="trip.toggleElevation()"
+      [disabled]="!trip.hasRoute() || !trip.hasElevation()" />
+    Colour path by elevation
   </label>
 
   @if (trip.hasRoute()) {

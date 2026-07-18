@@ -20,7 +20,7 @@ import { TripCaptionComponent } from '../trip-caption/trip-caption.component';
 export class RouteMapComponent implements AfterViewInit, OnDestroy {
   @ViewChild('map', { static: true }) mapEl!: ElementRef<HTMLDivElement>;
 
-  private readonly trip = inject(TripService);
+  readonly trip = inject(TripService);
 
   ngAfterViewInit(): void {
     this.trip.attachMap(this.mapEl.nativeElement);

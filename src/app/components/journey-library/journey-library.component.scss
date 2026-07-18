@@ -1,0 +1,126 @@
+:host {
+  display: grid;
+  gap: 10px;
+}
+
+.save-row {
+  display: flex;
+  gap: 8px;
+}
+
+.name-input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--text);
+  font: 500 13px/1 var(--font-body);
+
+  &::placeholder {
+    color: var(--text-dim);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.io-row {
+  display: flex;
+  gap: 8px;
+
+  .ghost-btn {
+    flex: 1;
+  }
+}
+
+.import-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+
+  input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+}
+
+.import-error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.journey-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.journey {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.journey-load {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--good);
+  }
+}
+
+.journey-name {
+  font: 600 13px/1.2 var(--font-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journey-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.icon-btn {
+  width: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--good);
+    color: var(--text);
+  }
+}
+
+.icon-danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.empty-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
