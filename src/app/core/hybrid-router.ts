@@ -160,7 +160,7 @@ export class HybridRouter implements L.Routing.IRouter {
 }
 
 /** Promisified single call to an LRM router. */
-function routeOnce(
+export function routeOnce(
   router: L.Routing.IRouter,
   waypoints: L.Routing.Waypoint[],
 ): Promise<L.Routing.IRoute> {

@@ -9,18 +9,22 @@
   flex-direction: column;
   gap: 20px;
   padding: 24px 22px;
-  background: linear-gradient(180deg, var(--fir) 0%, var(--ink) 100%);
-  border-right: 1px solid rgba(243, 239, 228, 0.08);
+  background: linear-gradient(180deg, var(--panel) 0%, var(--bg) 100%);
+  border-right: 1px solid var(--line);
   overflow-y: auto;
   z-index: 500;
 }
 
 .masthead {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+
   h1 {
     margin: 2px 0 4px;
     font: 700 30px/1.05 var(--font-display);
     letter-spacing: -0.01em;
-    color: var(--chalk);
+    color: var(--text);
   }
 }
 
@@ -28,19 +32,24 @@
   font: 600 11px/1 var(--font-mono);
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--blaze);
+  color: var(--accent);
+}
+
+.masthead-text {
+  min-width: 0;
 }
 
 .masthead-sub {
   margin: 0;
-  color: var(--chalk-dim);
+  color: var(--text-dim);
   font-size: 13px;
 }
 
 .panel-foot {
   margin-top: auto;
   font-size: 10px;
-  color: rgba(243, 239, 228, 0.4);
+  color: var(--text-dim);
+  opacity: 0.7;
 }
 
 .map-wrap {
@@ -62,7 +71,7 @@
     order: 2;
     max-height: 46dvh;
     border-right: 0;
-    border-top: 1px solid rgba(243, 239, 228, 0.08);
+    border-top: 1px solid var(--line);
   }
 
   .map-wrap {

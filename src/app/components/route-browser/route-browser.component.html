@@ -1,0 +1,39 @@
+@if (trip.hasRoute() && trip.legs().length) {
+  <h2 class="block-title">Route browser</h2>
+  <ul class="legs">
+    @for (leg of trip.legs(); track $index; let i = $index) {
+      <li class="leg">
+        <button
+          type="button"
+          class="leg-pins"
+          (click)="trip.focusLeg(i)"
+          title="Zoom the map to this leg">
+          <span class="pin-chip" [class.pin-start]="i === 0">{{ pinLabel(i) }}</span>
+          <span class="leg-arrow" aria-hidden="true">→</span>
+          <span class="pin-chip" [class.pin-end]="i === trip.legs().length - 1">
+            {{ pinLabel(i + 1) }}
+          </span>
+        </button>
+        <span class="leg-meta">
+          <span class="leg-icon" aria-hidden="true">{{ legIcon(leg.modeId) }}</span>
+          {{ km(leg.distance) | number: '1.1-1' }} km · {{ fmtDuration(leg.time) }}
+        </span>
+        <select
+          class="leg-mode"
+          (change)="onModeChange(i, $event)"
+          [attr.aria-label]="'Travel mode for leg ' + pinLabel(i) + ' to ' + pinLabel(i + 1)">
+          <!-- [selected] instead of [value] on the select: the value binding
+               runs before the options exist on first render and gets lost. -->
+          <option value="" [selected]="selectedMode(i) === ''">
+            Trip mode ({{ trip.mode().label }})
+          </option>
+          @for (m of modes; track m.id) {
+            <option [value]="m.id" [selected]="selectedMode(i) === m.id">
+              {{ m.icon }} {{ m.label }}
+            </option>
+          }
+        </select>
+      </li>
+    }
+  </ul>
+}

@@ -4,11 +4,16 @@ import 'leaflet-routing-machine';
 
 import { TRAVEL_MODES, TravelMode } from '../core/travel-modes';
 import { RouteAnimator, AnimatorFrame } from '../core/route-animator';
+import { LegRoute, LegRouter, RoutedLeg } from '../core/leg-router';
+import { JourneySnapshot, parseSnapshot } from '../core/journey';
 
 /** LRM's runtime route object carries more than the published IRoute type. */
 interface RouteResult extends L.Routing.IRoute {
   inputWaypoints?: L.Routing.Waypoint[];
 }
+
+/** The in-progress journey survives reloads via this key. */
+const CURRENT_KEY = 'route-reel:current';
 
 /**
  * Owns all trip state and the Leaflet routing/playback machinery.
@@ -26,6 +31,10 @@ export class TripService {
   readonly error = signal<string | null>(null);
   readonly distance = signal(0); // metres
   readonly duration = signal(0); // seconds
+  /** Routed legs between consecutive pins, in order. */
+  readonly legs = signal<RoutedLeg[]>([]);
+  /** Per-leg mode overrides (leg index → mode id); absent legs use `mode`. */
+  readonly legModes = signal<Record<number, string>>({});
 
   readonly playing = signal(false);
   readonly progress = signal(0); // 0..1
@@ -40,9 +49,16 @@ export class TripService {
   private plan!: L.Routing.Plan;
   private control!: L.Routing.Control;
   private travelMarker: L.Marker | null = null;
+  private markerModeId = '';
+
+  private readonly legRouter = new LegRouter({
+    modeForLeg: (i) => this.resolveLegMode(i),
+  });
 
   private routeCoords: L.LatLng[] = [];
   private waypointIndices: number[] = [];
+  private legGeometries: L.LatLng[][] = [];
+  private legModeIds: string[] = [];
   private animator: RouteAnimator | null = null;
   private fittedOnce = false;
   private lastUiPush = 0;
@@ -51,6 +67,8 @@ export class TripService {
 
   attachMap(container: HTMLElement): void {
     this.zone.runOutsideAngular(() => this.initMap(container));
+    const saved = this.readCurrent();
+    if (saved) this.loadJourney(saved);
   }
 
   detachMap(): void {
@@ -72,7 +90,10 @@ export class TripService {
     }).addTo(this.map);
 
     // Center on the user if they allow it; the default view stays otherwise.
-    this.map.locate({ setView: true, maxZoom: 13 });
+    // Skip when a saved journey is about to be restored — fitBounds wins.
+    if (!this.readCurrent()) {
+      this.map.locate({ setView: true, maxZoom: 13 });
+    }
 
     this.plan = L.Routing.plan([], {
       draggableWaypoints: true,
@@ -84,7 +105,7 @@ export class TripService {
     this.control = L.Routing
       .control({
         plan: this.plan,
-        router: this.mode().createRouter(),
+        router: this.legRouter,
         routeWhileDragging: true,
         show: false, // the app panel replaces LRM's itinerary
         fitSelectedRoutes: false,
@@ -93,9 +114,11 @@ export class TripService {
           addWaypoints: true,
           missingRouteTolerance: 10,
           extendToWaypoints: true,
+          // Colors come from the theme tokens via the class names (styles.scss);
+          // the hex values are only the pre-CSS fallback.
           styles: [
-            { color: '#0e1f1a', opacity: 0.55, weight: 9 },
-            { color: '#f2a33c', opacity: 1, weight: 5 },
+            { className: 'route-casing', color: '#0e1f1a', opacity: 0.55, weight: 9 },
+            { className: 'route-line', color: '#f2a33c', opacity: 1, weight: 5 },
           ],
         },
       })
@@ -121,6 +144,7 @@ export class TripService {
     this.plan.on('waypointschanged', () =>
       this.push(() => {
         this.waypointCount.set(this.placedWaypoints().length);
+        this.trimLegModes();
         if (this.waypointCount() < 2) this.clearRouteState();
       }),
     );
@@ -143,20 +167,33 @@ export class TripService {
     if (mode.id === this.mode().id) return;
     this.mode.set(mode);
     this.resetPlayback();
-    // LRM has no public router setter; swapping the private field and
-    // re-routing is the established way to change profiles in place.
-    (this.control as unknown as { _router: L.Routing.IRouter })._router =
-      mode.createRouter();
-    if (this.placedWaypoints().length >= 2) {
-      this.zone.runOutsideAngular(() => this.control.route());
-    }
+    // Legs already fetched for this mode come straight from the router cache.
+    this.reroute();
+  }
+
+  /** Overrides the travel mode of one leg; `null` returns it to the trip mode. */
+  setLegMode(legIndex: number, modeId: string | null): void {
+    const current = this.legModes();
+    if ((current[legIndex] ?? null) === modeId) return;
+    const next = { ...current };
+    if (modeId === null) delete next[legIndex];
+    else next[legIndex] = modeId;
+    this.legModes.set(next);
+    this.resetPlayback();
+    this.reroute();
   }
 
   clearAll(): void {
     this.resetPlayback();
+    this.legModes.set({});
     this.plan.setWaypoints([]);
     this.fittedOnce = false;
     this.clearRouteState();
+    try {
+      localStorage.removeItem(CURRENT_KEY);
+    } catch {
+      // Storage unavailable — nothing to clear.
+    }
   }
 
   togglePlay(): void {
@@ -167,15 +204,11 @@ export class TripService {
       return;
     }
     if (!this.travelMarker) {
+      this.markerModeId = this.legModeIds[0] ?? this.mode().id;
       this.travelMarker = L.marker(this.routeCoords[0], {
         interactive: false,
         zIndexOffset: 1000,
-        icon: L.divIcon({
-          className: '',
-          html: `<div class="travel-marker">${this.mode().icon}</div>`,
-          iconSize: [38, 38],
-          iconAnchor: [19, 19],
-        }),
+        icon: this.travelIcon(this.markerModeId),
       });
       this.zone.runOutsideAngular(() => this.travelMarker!.addTo(this.map));
     }
@@ -203,6 +236,62 @@ export class TripService {
 
   toggleFollow(): void {
     this.follow.set(!this.follow());
+  }
+
+  /** Zooms the map to one leg (used by the route browser). */
+  focusLeg(legIndex: number): void {
+    const coords = this.legGeometries[legIndex];
+    if (!coords?.length) return;
+    this.zone.runOutsideAngular(() =>
+      this.map.fitBounds(L.latLngBounds(coords), { padding: [64, 64] }),
+    );
+  }
+
+  // --- Journeys ---------------------------------------------------------
+
+  /** Serializable description of the current journey (null until 2+ pins). */
+  snapshot(): JourneySnapshot | null {
+    const waypoints = this.placedWaypoints().map((w) => ({
+      lat: w.latLng.lat,
+      lng: w.latLng.lng,
+    }));
+    if (waypoints.length < 2) return null;
+    return {
+      modeId: this.mode().id,
+      waypoints,
+      legModes: { ...this.legModes() },
+    };
+  }
+
+  loadJourney(journey: JourneySnapshot): void {
+    const mode = TRAVEL_MODES.find((m) => m.id === journey.modeId) ?? TRAVEL_MODES[0];
+    this.mode.set(mode);
+    this.legModes.set({ ...(journey.legModes ?? {}) });
+    this.resetPlayback();
+    this.fittedOnce = false;
+    this.zone.runOutsideAngular(() =>
+      this.plan.setWaypoints(
+        journey.waypoints.map((p) => L.Routing.waypoint(L.latLng(p.lat, p.lng))),
+      ),
+    );
+  }
+
+  private autosaveCurrent(): void {
+    const snap = this.snapshot();
+    try {
+      if (snap) localStorage.setItem(CURRENT_KEY, JSON.stringify(snap));
+    } catch {
+      // Storage unavailable — skip the autosave.
+    }
+  }
+
+  private readCurrent(): JourneySnapshot | null {
+    try {
+      const raw = localStorage.getItem(CURRENT_KEY);
+      return raw ? parseSnapshot(JSON.parse(raw)) : null;
+    } catch {
+      return null;
+    }
   }
 
   // --- Waypoints --------------------------------------------------------
@@ -251,18 +340,44 @@ export class TripService {
     return marker;
   }
 
+  private trimLegModes(): void {
+    const legCount = Math.max(0, this.placedWaypoints().length - 1);
+    const current = this.legModes();
+    const stale = Object.keys(current).filter((k) => Number(k) >= legCount);
+    if (!stale.length) return;
+    const next = { ...current };
+    for (const k of stale) delete next[Number(k)];
+    this.legModes.set(next);
+  }
+
+  private resolveLegMode(legIndex: number): TravelMode {
+    const id = this.legModes()[legIndex];
+    return (id && TRAVEL_MODES.find((m) => m.id === id)) || this.mode();
+  }
+
+  private reroute(): void {
+    if (this.placedWaypoints().length >= 2) {
+      this.zone.runOutsideAngular(() => this.control.route());
+    }
+  }
+
   // --- Routing results --------------------------------------------------
 
   private onRoutesFound(e: L.Routing.RoutingResultEvent): void {
-    const route = e.routes[0] as RouteResult;
+    const route = e.routes[0] as RouteResult & Partial<LegRoute>;
     this.routeCoords = route.coordinates ?? [];
 
     // Map each user waypoint to its index in the routed geometry so the
-    // playback can tell which stop was just passed.
+    // playback can tell which stop was just passed. LegRouter reports the
+    // exact indices; other routers fall back to a nearest-point search.
     const inputs: L.Routing.Waypoint[] = route.inputWaypoints ?? this.placedWaypoints();
-    this.waypointIndices = inputs
-      .filter((w) => !!w.latLng)
-      .map((w) => this.nearestCoordIndex(w.latLng));
+    this.waypointIndices =
+      route.waypointIndices ??
+      inputs.filter((w) => !!w.latLng).map((w) => this.nearestCoordIndex(w.latLng));
+
+    const legs = route.legs ?? [];
+    this.legGeometries = legs.map((l) => l.coordinates);
+    this.legModeIds = legs.map((l) => l.modeId);
 
     const dist = route.summary?.totalDistance ?? 0;
     const time =
@@ -286,11 +401,14 @@ export class TripService {
       this.hasRoute.set(this.routeCoords.length > 1);
       this.distance.set(dist);
       this.duration.set(time);
+      this.legs.set(legs);
       this.progress.set(0);
       this.travelled.set(0);
       this.caption.set('');
       this.stopTicks.set(this.computeStopTicks());
     });
+
+    this.autosaveCurrent();
   }
 
   private nearestCoordIndex(p: L.LatLng): number {
@@ -308,9 +426,12 @@ export class TripService {
 
   private clearRouteState(): void {
     this.routeCoords = [];
+    this.legGeometries = [];
+    this.legModeIds = [];
     this.hasRoute.set(false);
     this.distance.set(0);
     this.duration.set(0);
+    this.legs.set([]);
     this.progress.set(0);
     this.travelled.set(0);
     this.caption.set('');
@@ -328,9 +449,30 @@ export class TripService {
     this.playing.set(false);
   }
 
+  private travelIcon(modeId: string): L.DivIcon {
+    const mode = TRAVEL_MODES.find((m) => m.id === modeId) ?? this.mode();
+    return L.divIcon({
+      className: '',
+      html: `<div class="travel-marker">${mode.icon}</div>`,
+      iconSize: [38, 38],
+      iconAnchor: [19, 19],
+    });
+  }
+
   private onAnimationFrame(f: AnimatorFrame): void {
     // Runs outside Angular — touch the map directly, push UI state sparingly.
     this.travelMarker?.setLatLng(f.position);
+
+    // Swap the marker icon when the journey enters a leg with another mode.
+    if (this.legModeIds.length && this.travelMarker) {
+      const leg = Math.min(f.lastWaypoint, this.legModeIds.length - 1);
+      const modeId = this.legModeIds[leg] ?? this.mode().id;
+      if (modeId !== this.markerModeId) {
+        this.markerModeId = modeId;
+        this.travelMarker.setIcon(this.travelIcon(modeId));
+      }
+    }
+
     if (this.follow() && !f.finished) {
       this.map.panTo(f.position, { animate: false });
     }

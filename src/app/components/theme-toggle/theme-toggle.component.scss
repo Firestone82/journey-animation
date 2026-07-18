@@ -1,0 +1,21 @@
+.theme-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text-dim);
+  font: 600 11px/1 var(--font-mono);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--good);
+    color: var(--text);
+  }
+}
+
+.theme-icon {
+  font-size: 13px;
+}
